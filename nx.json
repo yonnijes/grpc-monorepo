@@ -1,7 +1,10 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/.eslintrc.json",
@@ -37,7 +40,26 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["apps/grpc-monorepo-e2e/**/*"]
+      "exclude": [
+        "apps/grpc-monorepo-e2e/**/*",
+        "apps/user-e2e/**/*",
+        "apps/product-e2e/**/*",
+        "apps/bff-e2e/**/*"
+      ]
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
     }
   ]
 }

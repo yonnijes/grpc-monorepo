@@ -1,0 +1,16 @@
+{
+  "name": "protos",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/protos/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project protos --web",
+  "targets": {
+    "generate-protos": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/protos/generate-protos.cjs"
+      }
+    }
+  }
+}

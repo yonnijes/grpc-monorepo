@@ -1,101 +1,104 @@
-# GrpcMonorepo
+# gRPC Monorepo con NestJS y Nx
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+Este proyecto es una implementación de referencia para una arquitectura de microservicios dentro de un monorepo gestionado por [Nx](https://nx.dev). Demuestra una comunicación eficiente entre servicios utilizando **gRPC** y expone una API unificada a través de un patrón **BFF (Backend For Frontend)**.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## 📋 Descripción General
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+El sistema está compuesto por tres aplicaciones principales: un API Gateway (BFF) y dos microservicios de dominio (Usuarios y Productos). La comunicación interna se realiza estrictamente mediante gRPC, asegurando tipos fuertes y alto rendimiento, mientras que el BFF expone endpoints REST tradicionales para el consumo de clientes externos.
 
-## Run tasks
+### Características Principales
 
-To run the dev server for your app, use:
+- **Monorepo Nx**: Gestión eficiente de múltiples proyectos y librerías compartidas.
+- **NestJS**: Framework progresivo de Node.js utilizado en todos los servicios.
+- **gRPC**: Protocolo de comunicación de alto rendimiento para interconexión de microservicios.
+- **Protobuf**: Definición de contratos de API centralizada en una librería compartida.
+- **Tipado Fuerte**: Generación automática de interfaces TypeScript a partir de archivos `.proto`.
 
-```sh
-npx nx serve grpc-monorepo
+## 🏗 Arquitectura
+
+El siguiente diagrama ilustra el flujo de comunicación y la dependencia de los componentes:
+
+```mermaid
+flowchart TD
+    Client[Cliente Web/Mobile] -->|HTTP REST| BFF[BFF API Gateway]
+    
+    subgraph "Microservicios gRPC"
+        direction TB
+        BFF -->|gRPC :50051| UserSvc[Gestión de Usuarios]
+        BFF -->|gRPC :50052| ProductSvc[Gestión de Productos]
+    end
+
+    subgraph "Librerías Compartidas"
+        ProtosLib[libs/protos\nDefiniciones .proto]
+    end
+
+    ProtosLib -.->|Genera Tipos TS| BFF
+    ProtosLib -.->|Genera Tipos TS| UserSvc
+    ProtosLib -.->|Genera Tipos TS| ProductSvc
+
+    style BFF fill:#6b5b95,stroke:#333,stroke-width:2px,color:#fff
+    style UserSvc fill:#feb236,stroke:#333,stroke-width:2px
+    style ProductSvc fill:#d64161,stroke:#333,stroke-width:2px
+    style ProtosLib fill:#ff7b25,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
-To create a production bundle:
+## 📂 Estructura del Proyecto
 
-```sh
-npx nx build grpc-monorepo
+- **apps/**
+  - **bff**: Servidor HTTP que actúa como orquestador. Recibe peticiones REST y llama a los microservicios correspondientes.
+  - **user**: Servicio encargado del dominio de **Usuarios**. Implementa la definición `user.proto`.
+  - **product**: Servicio encargado del dominio de **Productos**. Implementa la definición `product.proto`.
+
+- **libs/**
+  - **protos**: Librería central que contiene los archivos de definición `.proto` y scripts para generar el código TypeScript (stubs) necesario para clientes y servidores.
+    - `src/proto/user.proto`: Definiciones para el servicio de usuarios.
+    - `src/proto/product.proto`: Definiciones para el servicio de productos.
+
+## 🚀 Comandos Principales
+
+### Instalación
+
+```bash
+npm install
 ```
 
-To see all available targets to run for a project, run:
+### Generación de Código gRPC
 
-```sh
-npx nx show project grpc-monorepo
+Si modificas los archivos `.proto`, necesitas regenerar los tipos TypeScript:
+
+```bash
+npx nx run protos:generate-protos
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Ejecutar Servicios
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Puedes ejecutar todos los servicios en paralelo (útil para desarrollo):
 
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/nest:app demo
+```bash
+npx nx run-many --target=serve --all
 ```
 
-To generate a new library, use:
+O iniciar cada uno individualmente en terminales separadas:
 
-```sh
-npx nx g @nx/node:lib mylib
+```bash
+# Iniciar BFF (http://localhost:3000)
+npx nx serve bff
+
+# Iniciar Microservicio de Usuarios (0.0.0.0:50051)
+npx nx serve user
+
+# Iniciar Microservicio de Productos (0.0.0.0:50052)
+npx nx serve product
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## 🧪 Endpoints de Prueba
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Una vez que el sistema esté corriendo, puedes probar la comunicación a través del BFF:
 
-## Set up CI!
+- **Usuarios**:
+  - `GET http://localhost:3000/api/users` - Lista usuarios (BFF -> User Service).
+  - `GET http://localhost:3000/api/users/:id` - Obtiene un usuario por ID.
 
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- **Productos**:
+  - `GET http://localhost:3000/api/products` - Lista productos (BFF -> Product Service).
+  - `GET http://localhost:3000/api/products/:id` - Obtiene un producto por ID.
