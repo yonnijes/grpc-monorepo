@@ -9,6 +9,7 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import type { handleUnaryCall, Metadata, UntypedServiceImplementation } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
+import { ProductResponse } from "./product";
 
 export const protobufPackage = "user";
 
@@ -27,12 +28,36 @@ export interface CreateUserRequest {
   age: number;
 }
 
+export interface AddFavoriteRequest {
+  userId: string;
+  productId: string;
+}
+
+export interface RemoveFavoriteRequest {
+  userId: string;
+  productId: string;
+}
+
+/** Modelo interno: User almacena solo IDs de productos favoritos */
+export interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  age: number;
+  createdAt: string;
+  /** Solo IDs de productos */
+  favoriteIds: string[];
+}
+
+/** Respuesta al cliente: incluye los productos completos */
 export interface UserResponse {
   id: string;
   name: string;
   email: string;
   age: number;
   createdAt: string;
+  /** Productos completos obtenidos del servicio Product */
+  favorites: ProductResponse[];
 }
 
 export interface UsersListResponse {
@@ -186,8 +211,196 @@ export const CreateUserRequest: MessageFns<CreateUserRequest> = {
   },
 };
 
+function createBaseAddFavoriteRequest(): AddFavoriteRequest {
+  return { userId: "", productId: "" };
+}
+
+export const AddFavoriteRequest: MessageFns<AddFavoriteRequest> = {
+  encode(message: AddFavoriteRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.productId !== "") {
+      writer.uint32(18).string(message.productId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): AddFavoriteRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAddFavoriteRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.productId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseRemoveFavoriteRequest(): RemoveFavoriteRequest {
+  return { userId: "", productId: "" };
+}
+
+export const RemoveFavoriteRequest: MessageFns<RemoveFavoriteRequest> = {
+  encode(message: RemoveFavoriteRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.productId !== "") {
+      writer.uint32(18).string(message.productId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RemoveFavoriteRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRemoveFavoriteRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.productId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseUserData(): UserData {
+  return { id: "", name: "", email: "", age: 0, createdAt: "", favoriteIds: [] };
+}
+
+export const UserData: MessageFns<UserData> = {
+  encode(message: UserData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.email !== "") {
+      writer.uint32(26).string(message.email);
+    }
+    if (message.age !== 0) {
+      writer.uint32(32).int32(message.age);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(42).string(message.createdAt);
+    }
+    for (const v of message.favoriteIds) {
+      writer.uint32(50).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UserData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUserData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.age = reader.int32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.favoriteIds.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
 function createBaseUserResponse(): UserResponse {
-  return { id: "", name: "", email: "", age: 0, createdAt: "" };
+  return { id: "", name: "", email: "", age: 0, createdAt: "", favorites: [] };
 }
 
 export const UserResponse: MessageFns<UserResponse> = {
@@ -206,6 +419,9 @@ export const UserResponse: MessageFns<UserResponse> = {
     }
     if (message.createdAt !== "") {
       writer.uint32(42).string(message.createdAt);
+    }
+    for (const v of message.favorites) {
+      ProductResponse.encode(v!, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -255,6 +471,14 @@ export const UserResponse: MessageFns<UserResponse> = {
           }
 
           message.createdAt = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.favorites.push(ProductResponse.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -321,6 +545,10 @@ export interface UserServiceClient {
   listUsers(request: ListUsersRequest, metadata: Metadata, ...rest: any): Observable<UsersListResponse>;
 
   createUser(request: CreateUserRequest, metadata: Metadata, ...rest: any): Observable<UserResponse>;
+
+  addFavorite(request: AddFavoriteRequest, metadata: Metadata, ...rest: any): Observable<UserResponse>;
+
+  removeFavorite(request: RemoveFavoriteRequest, metadata: Metadata, ...rest: any): Observable<UserResponse>;
 }
 
 export interface UserServiceController {
@@ -341,11 +569,23 @@ export interface UserServiceController {
     metadata: Metadata,
     ...rest: any
   ): Promise<UserResponse> | Observable<UserResponse> | UserResponse;
+
+  addFavorite(
+    request: AddFavoriteRequest,
+    metadata: Metadata,
+    ...rest: any
+  ): Promise<UserResponse> | Observable<UserResponse> | UserResponse;
+
+  removeFavorite(
+    request: RemoveFavoriteRequest,
+    metadata: Metadata,
+    ...rest: any
+  ): Promise<UserResponse> | Observable<UserResponse> | UserResponse;
 }
 
 export function UserServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getUser", "listUsers", "createUser"];
+    const grpcMethods: string[] = ["getUser", "listUsers", "createUser", "addFavorite", "removeFavorite"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("UserService", method)(constructor.prototype[method], method, descriptor);
@@ -389,12 +629,33 @@ export const UserServiceService = {
     responseSerialize: (value: UserResponse): Buffer => Buffer.from(UserResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): UserResponse => UserResponse.decode(value),
   },
+  addFavorite: {
+    path: "/user.UserService/AddFavorite",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: AddFavoriteRequest): Buffer => Buffer.from(AddFavoriteRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): AddFavoriteRequest => AddFavoriteRequest.decode(value),
+    responseSerialize: (value: UserResponse): Buffer => Buffer.from(UserResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): UserResponse => UserResponse.decode(value),
+  },
+  removeFavorite: {
+    path: "/user.UserService/RemoveFavorite",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RemoveFavoriteRequest): Buffer =>
+      Buffer.from(RemoveFavoriteRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RemoveFavoriteRequest => RemoveFavoriteRequest.decode(value),
+    responseSerialize: (value: UserResponse): Buffer => Buffer.from(UserResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): UserResponse => UserResponse.decode(value),
+  },
 } as const;
 
 export interface UserServiceServer extends UntypedServiceImplementation {
   getUser: handleUnaryCall<GetUserRequest, UserResponse>;
   listUsers: handleUnaryCall<ListUsersRequest, UsersListResponse>;
   createUser: handleUnaryCall<CreateUserRequest, UserResponse>;
+  addFavorite: handleUnaryCall<AddFavoriteRequest, UserResponse>;
+  removeFavorite: handleUnaryCall<RemoveFavoriteRequest, UserResponse>;
 }
 
 export interface MessageFns<T> {

@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 @Controller()
 @User.UserServiceControllerMethods()
 export class AppController implements User.UserServiceController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   getUser(
     request: User.GetUserRequest
@@ -33,5 +33,23 @@ export class AppController implements User.UserServiceController {
     | Promise<User.UserResponse>
     | Observable<User.UserResponse> {
     return this.appService.createUser(request);
+  }
+
+  addFavorite(
+    request: User.AddFavoriteRequest
+  ):
+    | User.UserResponse
+    | Promise<User.UserResponse>
+    | Observable<User.UserResponse> {
+    return this.appService.addFavorite(request);
+  }
+
+  removeFavorite(
+    request: User.RemoveFavoriteRequest
+  ):
+    | User.UserResponse
+    | Promise<User.UserResponse>
+    | Observable<User.UserResponse> {
+    return this.appService.removeFavorite(request);
   }
 }

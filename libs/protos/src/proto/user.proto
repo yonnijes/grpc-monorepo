@@ -2,10 +2,14 @@ syntax = "proto3";
 
 package user;
 
+import "product.proto";
+
 service UserService {
   rpc GetUser (GetUserRequest) returns (UserResponse);
   rpc ListUsers (ListUsersRequest) returns (UsersListResponse);
   rpc CreateUser (CreateUserRequest) returns (UserResponse);
+  rpc AddFavorite (AddFavoriteRequest) returns (UserResponse);
+  rpc RemoveFavorite (RemoveFavoriteRequest) returns (UserResponse);
 }
 
 message GetUserRequest {
@@ -23,12 +27,34 @@ message CreateUserRequest {
   int32 age = 3;
 }
 
+message AddFavoriteRequest {
+  string userId = 1;
+  string productId = 2;
+}
+
+message RemoveFavoriteRequest {
+  string userId = 1;
+  string productId = 2;
+}
+
+// Modelo interno: User almacena solo IDs de productos favoritos
+message UserData {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  int32 age = 4;
+  string createdAt = 5;
+  repeated string favoriteIds = 6;  // Solo IDs de productos
+}
+
+// Respuesta al cliente: incluye los productos completos
 message UserResponse {
   string id = 1;
   string name = 2;
   string email = 3;
   int32 age = 4;
   string createdAt = 5;
+  repeated product.ProductResponse favorites = 6;  // Productos completos obtenidos del servicio Product
 }
 
 message UsersListResponse {

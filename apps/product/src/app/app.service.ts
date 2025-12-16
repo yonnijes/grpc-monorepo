@@ -21,7 +21,7 @@ export class AppService {
       products: [
         {
           id: '1',
-          name: 'Laptop',
+          name: 'Laptop x',
           description: 'High performance laptop',
           price: 1500,
           stock: 50,

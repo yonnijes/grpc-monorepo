@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, OnModuleInit, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Inject, OnModuleInit, Param, Body } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { AppService } from './app.service';
 import { User, Product } from '@grpc-monorepo/protos';
@@ -44,5 +44,21 @@ export class AppController implements OnModuleInit {
   @Get('users')
   listUsers() {
     return this.userService.listUsers({ limit: 10, offset: 0 }, new Metadata());
+  }
+
+  @Post('users/:userId/favorites')
+  addFavorite(
+    @Param('userId') userId: string,
+    @Body('productId') productId: string
+  ) {
+    return this.userService.addFavorite({ userId, productId }, new Metadata());
+  }
+
+  @Delete('users/:userId/favorites/:productId')
+  removeFavorite(
+    @Param('userId') userId: string,
+    @Param('productId') productId: string
+  ) {
+    return this.userService.removeFavorite({ userId, productId }, new Metadata());
   }
 }
