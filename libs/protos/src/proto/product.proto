@@ -6,6 +6,11 @@ service ProductService {
   rpc GetProduct (GetProductRequest) returns (ProductResponse);
   rpc ListProducts (ListProductsRequest) returns (ProductsListResponse);
   rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
+  rpc GetProductsByIds (GetProductsByIdsRequest) returns (ProductsListResponse);
+}
+
+message GetProductsByIdsRequest {
+  repeated string ids = 1;
 }
 
 message GetProductRequest {
