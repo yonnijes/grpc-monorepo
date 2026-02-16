@@ -17,6 +17,15 @@ export class AppController implements Product.ProductServiceController {
     return this.appService.getProduct(request);
   }
 
+  getProductsByIds(
+    request: Product.GetProductsByIdsRequest
+  ):
+    | Product.ProductsListResponse
+    | Promise<Product.ProductsListResponse>
+    | Observable<Product.ProductsListResponse> {
+    return this.appService.getProductsByIds(request);
+  }
+
   listProducts(
     request: Product.ListProductsRequest
   ):

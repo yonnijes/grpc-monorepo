@@ -43,7 +43,7 @@ export class AppService implements OnModuleInit {
 
   /**
    * Obtiene los datos completos de los productos favoritos
-   * consultando al servicio de Product
+   * consultando al servicio de Product de manera optimizada (batch)
    */
   private async getFavoriteProducts(
     favoriteIds: string[]
@@ -52,16 +52,15 @@ export class AppService implements OnModuleInit {
       return [];
     }
 
-
     try {
-      // Consultar cada producto al servicio de Product
-      const productPromises = favoriteIds.map((productId) =>
-        firstValueFrom(
-          this.productService.getProduct({ id: productId }, new Metadata())
+      // Optimización: Consultar todos los productos en una sola llamada RPC
+      const response = await firstValueFrom(
+        this.productService.getProductsByIds(
+          { ids: favoriteIds },
+          new Metadata()
         )
       );
-
-      return await Promise.all(productPromises);
+      return response.products;
     } catch (error) {
       console.error('Error fetching favorite products:', error);
       return [];

@@ -16,6 +16,10 @@ export interface GetProductRequest {
   id: string;
 }
 
+export interface GetProductsByIdsRequest {
+  ids: string[];
+}
+
 export interface ListProductsRequest {
   limit: number;
   offset: number;
@@ -69,6 +73,43 @@ export const GetProductRequest: MessageFns<GetProductRequest> = {
           }
 
           message.id = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseGetProductsByIdsRequest(): GetProductsByIdsRequest {
+  return { ids: [] };
+}
+
+export const GetProductsByIdsRequest: MessageFns<GetProductsByIdsRequest> = {
+  encode(message: GetProductsByIdsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.ids) {
+      writer.uint32(10).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProductsByIdsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProductsByIdsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.ids.push(reader.string());
           continue;
         }
       }
@@ -342,6 +383,8 @@ export const ProductsListResponse: MessageFns<ProductsListResponse> = {
 export interface ProductServiceClient {
   getProduct(request: GetProductRequest, metadata: Metadata, ...rest: any): Observable<ProductResponse>;
 
+  getProductsByIds(request: GetProductsByIdsRequest, metadata: Metadata, ...rest: any): Observable<ProductsListResponse>;
+
   listProducts(request: ListProductsRequest, metadata: Metadata, ...rest: any): Observable<ProductsListResponse>;
 
   createProduct(request: CreateProductRequest, metadata: Metadata, ...rest: any): Observable<ProductResponse>;
@@ -353,6 +396,12 @@ export interface ProductServiceController {
     metadata: Metadata,
     ...rest: any
   ): Promise<ProductResponse> | Observable<ProductResponse> | ProductResponse;
+
+  getProductsByIds(
+    request: GetProductsByIdsRequest,
+    metadata: Metadata,
+    ...rest: any
+  ): Promise<ProductsListResponse> | Observable<ProductsListResponse> | ProductsListResponse;
 
   listProducts(
     request: ListProductsRequest,
@@ -369,7 +418,7 @@ export interface ProductServiceController {
 
 export function ProductServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getProduct", "listProducts", "createProduct"];
+    const grpcMethods: string[] = ["getProduct", "getProductsByIds", "listProducts", "createProduct"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("ProductService", method)(constructor.prototype[method], method, descriptor);
@@ -395,6 +444,17 @@ export const ProductServiceService = {
     responseSerialize: (value: ProductResponse): Buffer => Buffer.from(ProductResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): ProductResponse => ProductResponse.decode(value),
   },
+  getProductsByIds: {
+    path: "/product.ProductService/GetProductsByIds",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetProductsByIdsRequest): Buffer =>
+      Buffer.from(GetProductsByIdsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): GetProductsByIdsRequest => GetProductsByIdsRequest.decode(value),
+    responseSerialize: (value: ProductsListResponse): Buffer =>
+      Buffer.from(ProductsListResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ProductsListResponse => ProductsListResponse.decode(value),
+  },
   listProducts: {
     path: "/product.ProductService/ListProducts",
     requestStream: false,
@@ -418,6 +478,7 @@ export const ProductServiceService = {
 
 export interface ProductServiceServer extends UntypedServiceImplementation {
   getProduct: handleUnaryCall<GetProductRequest, ProductResponse>;
+  getProductsByIds: handleUnaryCall<GetProductsByIdsRequest, ProductsListResponse>;
   listProducts: handleUnaryCall<ListProductsRequest, ProductsListResponse>;
   createProduct: handleUnaryCall<CreateProductRequest, ProductResponse>;
 }
